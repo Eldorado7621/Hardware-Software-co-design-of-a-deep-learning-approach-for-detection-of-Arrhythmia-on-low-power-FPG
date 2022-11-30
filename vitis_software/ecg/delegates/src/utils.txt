@@ -1,0 +1,207 @@
+
+void Buffer_print (const void * data, size_t size, const char* name)
+{
+  printf ("unsigned int %s [] = {", name);
+  for (int i = 0, c = 0; i < size/sizeof(unsigned int); i ++)
+  {
+    printf ("0x%X%s", ((unsigned int*) data)[i], (i + 1 < size/sizeof(unsigned int))?", ":"");
+    if (++c == 8)
+    {
+      c = 0;
+      printf ("\n");
+    }
+  }
+  printf ("};\nunsigned int %s_len = %d;\n", name,
+          size / sizeof(unsigned int));
+}
+
+///////////////////////////////////////////////////////////////////////
+void Tensor_histogram (float * tensor, size_t tensor_len, const char * name)
+{
+  typedef struct
+  {
+    int len_positive;
+    int len_negative;
+    int positive[128];
+    int negative[128];
+  } LogSpice;
+
+  typedef struct
+  {
+    int total_samples;
+    LogSpice positive;
+    LogSpice negative;
+  } Histogram;
+
+  typedef union
+  {
+    float     f32;
+    uint32_t  i32;
+  } Data32;
+
+  Data32 * data = (Data32 *) tensor;
+  Histogram histogram = { 0 };
+  int8_t exponent;
+
+  for (size_t i = 0; i < tensor_len; i ++)
+  {
+    exponent = 0xFF & (data[i].i32 >> 23);
+
+    ASSERT (exponent < 0x80);
+    if (!(exponent < 0x80))
+      return ;
+
+    exponent -= 127;
+
+    if (exponent < 0)
+    {
+      if (data[i].i32 & 0x80000000)
+      { // Negative
+        histogram.negative.negative[-exponent] ++;
+
+        if (histogram.negative.len_negative < -exponent)
+        {
+          histogram.negative.len_negative = -exponent;
+        }
+      }
+      else
+      { // Positive
+        histogram.negative.positive[-exponent] ++;
+
+        if (histogram.negative.len_positive < -exponent)
+        {
+          histogram.negative.len_positive = -exponent;
+        }
+      }
+    }
+    else
+    {
+      if (data[i].i32 & 0x80000000)
+      { // Negative
+        histogram.positive.negative[exponent] ++;
+
+        if (histogram.positive.len_negative < exponent)
+        {
+          histogram.positive.len_negative = exponent;
+        }
+      }
+      else
+      { // Positive
+        histogram.positive.positive[exponent] ++;
+
+        if (histogram.positive.len_positive < exponent)
+        {
+          histogram.positive.len_positive = exponent;
+        }
+      }
+    }
+  }
+
+  histogram.total_samples = tensor_len;
+  ///////////////////////////////////////////////////////////////////
+  if (histogram.negative.len_negative < 128)
+  {
+    printf ("Tensor Log-2 histogram\n");
+
+    printf ("\nNegative exponent:\n");
+    //////////////////// Negative
+    printf ("\n%s_positive_histogram = { ", name);
+    for (int i = histogram.negative.len_negative; 0 <= i; i--)
+    {
+      printf (
+          "'$-2^{-%d}$':%.2f%s", i, ((float)histogram.negative.negative[i])/((float)histogram.total_samples),
+          (1 <= i) ? ", " : "");
+    }
+    printf (" } ");
+
+    //////////////////// Positive
+    printf ("\n%s_negative_histogram = { ", name);
+    for (int i = 0; i < histogram.negative.len_positive; i++)
+    {
+      printf (
+          "'$+2^{-%d}$':%.2f%s", i, ((float)histogram.negative.positive[i])/((float)histogram.total_samples),
+          (i < histogram.negative.len_positive - 1) ? ", " : "");
+    }
+    printf (" } ");
+
+
+    printf ("\nPositive exponent:\n");
+    //////////////////// Negative
+    printf ("\n%s_positive_histogram = { ", name);
+    for (int i = histogram.positive.len_negative; 0 <= i; i--)
+    {
+      printf (
+          "'$-2^{-%d}$':%.2f%s", i, ((float)histogram.positive.negative[i])/((float)histogram.total_samples),
+          (1 <= i) ? ", " : "");
+    }
+    printf (" } ");
+
+    //////////////////// Positive
+    printf ("\n%s_negative_histogram = { ", name);
+    for (int i = 0; i < histogram.positive.len_positive; i++)
+    {
+      printf (
+          "'$+2^{-%d}$':%.2f%s", i, ((float)histogram.positive.positive[i])/((float)histogram.total_samples),
+          (i < histogram.positive.len_positive - 1) ? ", " : "");
+    }
+    printf (" } ");
+
+
+
+    printf ("\n");
+  }
+}
+///////////////////////////////////////////////////////////////////////
+
+
+void histogram (const tflite::ConvParams& params,
+               const tflite::RuntimeShape& input_shape,
+               const float* input_data,
+               const tflite::RuntimeShape& filter_shape,
+               const float* filter_data,
+               const tflite::RuntimeShape& bias_shape,
+               const float* bias_data,
+               const tflite::RuntimeShape& output_shape,
+               float* output_data)
+{
+  static int filter_max = 0;
+  static int inputbuffer_max = 0;
+  static int bias_max = 0;
+
+  Tensor_histogram ((float *) filter_data, filter_shape.FlatSize (), "Filter");
+
+  printf ("Input shape: [%d, %d, %d, %d], Flat size = %d \n",
+            input_shape.Dims (0),
+            input_shape.Dims (1),
+            input_shape.Dims (2),
+            input_shape.Dims (3),
+            input_shape.FlatSize ());
+
+  printf ("Filter shape: [%d, %d, %d, %d], Flat size = %d \n",
+          filter_shape.Dims (0),
+          filter_shape.Dims (1),
+          filter_shape.Dims (2),
+          filter_shape.Dims (3),
+          filter_shape.FlatSize ());
+
+  printf ("Bias shape: [%d], Flat size = %d \n",
+          bias_shape.Dims (0),
+          bias_shape.FlatSize ());
+
+  printf ("Input buffer shape: [%d, %d, %d], Flat size = %d \n",
+          filter_shape.Dims (1),
+          input_shape.Dims (2),
+          input_shape.Dims (3),
+          filter_shape.Dims (1) * input_shape.Dims (2) * input_shape.Dims (3));
+
+  if (filter_max < filter_shape.FlatSize ())
+    filter_max = filter_shape.FlatSize ();
+
+  if (bias_max < bias_shape.FlatSize ())
+    bias_max = bias_shape.FlatSize ();
+
+  if (inputbuffer_max < filter_shape.Dims (1) * input_shape.Dims (2) * input_shape.Dims (3))
+    inputbuffer_max = filter_shape.Dims (1) * input_shape.Dims (2) * input_shape.Dims (3);
+
+  printf ("Filter max size = %d, Bias max size = %d, Input buffer max size = %d \n", filter_max, bias_max, inputbuffer_max);
+}
