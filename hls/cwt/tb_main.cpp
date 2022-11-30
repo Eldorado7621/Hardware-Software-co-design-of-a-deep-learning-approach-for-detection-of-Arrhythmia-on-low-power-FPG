@@ -7,7 +7,7 @@
 
 #define TOL 0.01
 #define NORM(x) ((x) * (x)).real()
-#define SCALES 32
+//#define SCALES 32
 
 int main()
 {
@@ -15,13 +15,13 @@ int main()
 
 		dataFmt tb_input_stream,tb_output_stream;
 		   hls::stream<dataFmt>tb_dataInStream,tb_dataOutStream;
-		data_comp data_in[FFT_LENGTH];
-		data_comp data_out[FFT_LENGTH];
-		float ifft_out[FFT_LENGTH];
-		float cwt_in[FFT_LENGTH/2];
-		float cwt_output[SCALES][FFT_LENGTH/2];
+		data_comp data_in[PADDED_LENGTH];
+		data_comp data_out[PADDED_LENGTH];
+		float ifft_out[PADDED_LENGTH];
+		float cwt_in[PADDED_LENGTH/2];
+		float cwt_output[SCALES][PADDED_LENGTH/2];
 		fpint t;
-		data_comp exp_out[FFT_LENGTH];
+		data_comp exp_out[PADDED_LENGTH];
 		ifstream FFTfileIN("cwt_inp.txt");  //reading cwt input to the fft
 /*		ifstream FFTfileIN("out_cpp.txt");
 		ifstream FFTfileOUT("inp_cpp.txt");  //expected fft
@@ -32,7 +32,7 @@ int main()
 		float temp1,temp2,temp3,temp4;
 /*		data_t temp1,temp2,temp3,temp4;
 
-		for(int i=0; i<FFT_LENGTH; i++){
+		for(int i=0; i<PADDED_LENGTH; i++){
 			FFTfileIN>>temp1>>temp2;
 			data_in[i]=data_comp(temp1,temp2);
 		}*/
@@ -40,17 +40,17 @@ int main()
 		//______________________cwt__________________________
 
 
-		for(int i=0; i<FFT_LENGTH/2; i++){
+		for(int i=0; i<PADDED_LENGTH/2; i++){
 			FFTfileIN>>temp1;
 			cwt_in[i]=temp1;
 		}
-		for(int i=0; i<FFT_LENGTH/2; i++){
+		for(int i=0; i<PADDED_LENGTH/2; i++){
 			t.fval=cwt_in[i];
 			tb_input_stream.data=t.ival;
 
 			//tb_input_stream.data=cwt_in[i];
 
-			if(i==(FFT_LENGTH/2)-1)
+			if(i==(PADDED_LENGTH/2)-1)
 				tb_input_stream.last=1;
 			else
 				tb_input_stream.last=0;
@@ -74,7 +74,7 @@ int main()
 	    		//cwt_output[row][col]=tb_output_stream.data;
 	    	}
 	    }
-		for(int k=0;k<FFT_LENGTH/2;k++){
+		for(int k=0;k<20/2;k++){
 
 			cout << "id:"<<k<< " tb- Output: " << cwt_output[0][k] << endl;
 
@@ -86,12 +86,12 @@ int main()
 
 	//----------block for fft test ----------------------------------
 /*
-		for(int j=0; j<FFT_LENGTH;j++){
+		for(int j=0; j<PADDED_LENGTH;j++){
 			FFTfileOUT >> temp3 >> ws >> temp4;
 			exp_out[j]=data_comp(temp3,temp4);
 		}
 		FFTfileOUT.close();
-		for(int k=0;k<FFT_LENGTH;k++){
+		for(int k=0;k<PADDED_LENGTH;k++){
 			data_t n = NORM(exp_out[k]-data_out[k]);
 			cout << "Exp: " << exp_out[k] << " \t- Got: " << data_out[k] << " \t- Inp: " << data_in[k] << " \t- Norm: " << n << endl;
 //			cout << data_out[k].real() * 256 << ", " << data_out[k].imag() * 256 << endl;
@@ -110,17 +110,17 @@ int main()
 
 
 
-		for(int j=0; j<FFT_LENGTH;j++){
+		for(int j=0; j<PADDED_LENGTH;j++){
 			FFTfileOUT >> temp3>> temp4;
 			exp_out[j]=data_comp(temp3,temp4);
 		}
 		FFTfileOUT.close();
-		for(int i=0; i<FFT_LENGTH; i++){
+		for(int i=0; i<PADDED_LENGTH; i++){
 			FFTfileIN>>temp1>>temp2;
 			data_in[i]=data_comp(temp1,temp2);
 		}
 		ifft_sw(ifft_out,data_in);
-		for(int k=0;k<FFT_LENGTH;k++){
+		for(int k=0;k<PADDED_LENGTH;k++){
 			data_t n = NORM(exp_out[k]-data_out[k]);
 			cout << "Exp: " << exp_out[k] << " \t- Got: " << ifft_out[k] << " \t- Inp: " << data_in[k] << " \t- Norm: " << n << endl;
 

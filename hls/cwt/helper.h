@@ -6,7 +6,7 @@
 int fft_no_of_stages(int FFT_int_stage[NO_STAGES])
 {
 	int no_of_stage = 0;
-	int value=FFT_LENGTH;
+	int value=PADDED_LENGTH;
 	while (value!=1) {
 
 	   value=value>>1;
@@ -18,11 +18,11 @@ int fft_no_of_stages(int FFT_int_stage[NO_STAGES])
 }
 
 //compute the bit reversal
-void bit_reversal(data_comp data_in[FFT_LENGTH], data_comp dit_inp[FFT_LENGTH], int FFT_int_stage[NO_STAGES])
+void bit_reversal(data_comp data_in[PADDED_LENGTH], data_comp dit_inp[PADDED_LENGTH], int FFT_int_stage[NO_STAGES])
 {
 
 	int no_of_stages=fft_no_of_stages(FFT_int_stage);
-    for (int j=0;j<FFT_LENGTH;j++)
+    for (int j=0;j<PADDED_LENGTH;j++)
     {
          int reversed=0;
          for (int i=0;i<no_of_stages;i++)
@@ -38,25 +38,25 @@ void bit_reversal(data_comp data_in[FFT_LENGTH], data_comp dit_inp[FFT_LENGTH], 
 
 
 
- void twiddle_factor(data_comp W[FFT_LENGTH/2])
+ void twiddle_factor(data_comp W[PADDED_LENGTH/2])
   {
-       	 for(int i=0;i<FFT_LENGTH/2;i++)
+       	 for(int i=0;i<PADDED_LENGTH/2;i++)
        	 {
 //#pragma HLS UNROLL
-       		// W[i]=cos(2 * M_PI *i/ FFT_LENGTH),-sin(2 * M_PI *i/ FFT_LENGTH);
-       		 W[i]=data_comp(cos(2 * M_PI *i/ FFT_LENGTH) ,-sin(2 * M_PI *i/ FFT_LENGTH) );
+       		// W[i]=cos(2 * M_PI *i/ PADDED_LENGTH),-sin(2 * M_PI *i/ PADDED_LENGTH);
+       		 W[i]=data_comp(cos(2 * M_PI *i/ PADDED_LENGTH) ,-sin(2 * M_PI *i/ PADDED_LENGTH) );
        	 }
 
    }
 
-void twiddle_factor_ifft(data_comp W[FFT_LENGTH/2])
+void twiddle_factor_ifft(data_comp W[PADDED_LENGTH/2])
   {
 
-       	 for(int i=0;i<FFT_LENGTH/2;i++)
+       	 for(int i=0;i<PADDED_LENGTH/2;i++)
        	 {
 //#pragma HLS PIPELINE
-       		// W[i]=cos(2 * M_PI *i/ FFT_LENGTH),-sin(2 * M_PI *i/ FFT_LENGTH);
-       		 W[i]=data_comp(cos(2 * M_PI *i/ FFT_LENGTH) ,sin(2 * M_PI *i/ FFT_LENGTH) );
+       		// W[i]=cos(2 * M_PI *i/ PADDED_LENGTH),-sin(2 * M_PI *i/ PADDED_LENGTH);
+       		 W[i]=data_comp(cos(2 * M_PI *i/ PADDED_LENGTH) ,sin(2 * M_PI *i/ PADDED_LENGTH) );
        	 }
 
    }
