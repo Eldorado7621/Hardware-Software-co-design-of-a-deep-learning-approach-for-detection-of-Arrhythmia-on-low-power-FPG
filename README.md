@@ -1,7 +1,7 @@
 # Hardware-Software-co-design-of-a-deep-learning-approach-for-detection-of-Arrhythmia-on-low-power-FPGA
 
 # Overview
-In this project is on hardware/software co-design of a deep learning approach for fast detection of Arrhythmia on low power and low resource embedded FPGA device. In simpler terms, the project is about coming up with a low resource device that would detect abnormal heart rates at a fast rate and low power consumption.
+This project is on hardware/software co-design of a deep learning approach for fast detection of Arrhythmia on low power and low resource embedded FPGA device. The main goal of the project is to improve the rate of low power embedded devices to detect abnormalties in heart rate.
 
 # Motivation and Description
 
