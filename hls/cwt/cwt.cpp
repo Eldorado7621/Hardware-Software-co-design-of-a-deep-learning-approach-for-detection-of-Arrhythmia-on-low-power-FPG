@@ -20,9 +20,6 @@ int cwt(hls::stream<dataFmt> &dataInStream,hls::stream<dataFmt> &cwtOuptutStream
 #pragma HLS INTERFACE axis register both port=cwtOuptutStream
 #pragma HLS INTERFACE s_axilite port=return bundle=CTRL_BUS
 
-#pragma HLS ARRAY_PARTITION variable=wav_scales type=complete
-#pragma HLS ARRAY_PARTITION variable=omega type=complete
-#pragma HLS ARRAY_PARTITION variable=wft type=complete
 
 
 
