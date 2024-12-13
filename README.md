@@ -3,6 +3,9 @@
 # Overview
 This project is on hardware/software co-design of a deep learning approach for fast detection of Arrhythmia on low power and low resource embedded FPGA device. The main goal of the project is to improve the rate of low power embedded devices to detect abnormalties in heart rate.
 
+# Dataset
+The dataset was based on MIT BIH dataset.[](https://physionet.org/content/mitdb/1.0.0/))
+
 # Motivation and Description
 
 According to WHO, cardiovascular diseases are the world leading cause of death in the world-claiming about 17.9 million lives every year. [1](https://www.who.int/health-topics/cardiovascular-diseases#tab=tab_1)
